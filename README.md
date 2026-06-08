@@ -140,7 +140,7 @@ Contributions are welcome. A good workflow is:
 
 ## License
 
-Add a license file if you want to make the project clearly reusable by others.
+M.I.T License 
 
 ---
 
