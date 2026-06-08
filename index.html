@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PaperSolve — AKU-EB Answer Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0d;
+    --paper: #f5f0e8;
+    --cream: #ede8dc;
+    --accent: #c8401a;
+    --accent-soft: #f0d4cb;
+    --muted: #7a7268;
+    --border: #d4cec4;
+    --success: #2d6a4f;
+    --success-soft: #d4edda;
+    --warn: #8b5e3c;
+    --warn-soft: #fdebd0;
+    --card: #faf7f2;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    border-bottom: 2px solid var(--ink);
+    padding: 0 2rem;
+    display: flex;
+    align-items: stretch;
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .logo-block {
+    padding: 1.2rem 2rem 1.2rem 0;
+    border-right: 1px solid rgba(255,255,255,0.15);
+    margin-right: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .logo-main {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.9rem;
+    letter-spacing: -0.02em;
+    color: var(--paper);
+    line-height: 1;
+  }
+
+  .logo-main span { color: var(--accent); }
+
+  .logo-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+  }
+
+  .header-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    align-self: center;
+  }
+
+  .header-right {
+    margin-left: auto;
+    align-self: center;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .api-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+
+  .api-badge.set {
+    background: rgba(45,106,79,0.3);
+    color: #6fcf97;
+    border: 1px solid rgba(45,106,79,0.5);
+  }
+
+  .api-badge.unset {
+    background: rgba(200,64,26,0.2);
+    color: #eb8c73;
+    border: 1px solid rgba(200,64,26,0.4);
+  }
+
+  /* ─── LAYOUT ─── */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem;
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar { position: sticky; top: 2rem; }
+
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    background: var(--cream);
+    border-bottom: 1px solid var(--border);
+    padding: 0.85rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .panel-header .icon {
+    width: 18px;
+    height: 18px;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .panel-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .panel-body { padding: 1.2rem; }
+
+  /* ─── FORM CONTROLS ─── */
+  .field { margin-bottom: 1rem; }
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  select, input, textarea {
+    width: 100%;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    padding: 0.6rem 0.8rem;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.875rem;
+    color: var(--ink);
+    transition: border-color 0.15s;
+    appearance: none;
+  }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237a7268' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.8rem center;
+    padding-right: 2.5rem;
+    cursor: pointer;
+  }
+
+  select:focus, input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 140px;
+    line-height: 1.6;
+  }
+
+  /* marks row */
+  .marks-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  /* source indicator */
+  .source-indicator {
+    margin-top: 0.8rem;
+    padding: 0.65rem 0.9rem;
+    background: var(--success-soft);
+    border: 1px solid #a8d5b5;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--success);
+    letter-spacing: 0.05em;
+    display: none;
+    align-items: flex-start;
+    gap: 0.5rem;
+    line-height: 1.5;
+  }
+
+  .source-indicator.visible { display: flex; }
+  .source-indicator svg { flex-shrink: 0; margin-top: 1px; }
+
+  /* submit btn */
+  .btn-solve {
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 0.85rem 1rem;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .btn-solve:hover { background: #a8331a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(200,64,26,0.3); }
+  .btn-solve:active { transform: translateY(0); }
+  .btn-solve:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── MAIN CONTENT ─── */
+  .main { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  /* welcome state */
+  .welcome {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3rem 2.5rem;
+    text-align: center;
+  }
+
+  .welcome-icon {
+    width: 52px;
+    height: 52px;
+    background: var(--accent-soft);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+  }
+
+  .welcome h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+    color: var(--ink);
+  }
+
+  .welcome p {
+    color: var(--muted);
+    font-size: 0.875rem;
+    max-width: 380px;
+    margin: 0 auto 2rem;
+    line-height: 1.7;
+  }
+
+  .feature-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
+  .pill {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ─── ANSWER CARD ─── */
+  .answer-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    display: none;
+  }
+
+  .answer-card.visible { display: block; }
+
+  .answer-header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .answer-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .answer-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+  }
+
+  .answer-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.1rem;
+    color: var(--paper);
+  }
+
+  .marks-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    background: rgba(200,64,26,0.4);
+    color: #f5c5b8;
+    padding: 0.3rem 0.7rem;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+  }
+
+  /* answer source banner */
+  .source-banner {
+    background: var(--success-soft);
+    border-bottom: 1px solid #a8d5b5;
+    padding: 0.6rem 1.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--success);
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .answer-body {
+    padding: 1.8rem 1.5rem;
+  }
+
+  /* structured answer rendering */
+  .answer-content h3 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.05rem;
+    color: var(--ink);
+    margin: 1.4rem 0 0.6rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .answer-content h3:first-child { margin-top: 0; }
+
+  .answer-content p {
+    margin-bottom: 0.75rem;
+    line-height: 1.75;
+    color: var(--ink);
+  }
+
+  .answer-content ul, .answer-content ol {
+    margin: 0.5rem 0 0.75rem 1.4rem;
+  }
+
+  .answer-content li {
+    margin-bottom: 0.4rem;
+    line-height: 1.7;
+  }
+
+  /* formula block */
+  .formula-block {
+    background: var(--cream);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 3px 3px 0;
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--ink);
+    line-height: 1.7;
+  }
+
+  /* mark scheme callout */
+  .marks-callout {
+    background: var(--accent-soft);
+    border: 1px solid #deb5a8;
+    border-radius: 3px;
+    padding: 0.7rem 1rem;
+    margin: 1rem 0;
+    font-size: 0.78rem;
+    color: var(--accent);
+  }
+
+  .marks-callout strong {
+    display: block;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+    color: var(--accent);
+  }
+
+  /* step indicator */
+  .step-row {
+    display: flex;
+    gap: 0.8rem;
+    margin: 0.5rem 0;
+    align-items: flex-start;
+  }
+
+  .step-num {
+    width: 22px;
+    height: 22px;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-content { flex: 1; }
+
+  /* divider */
+  .divider {
+    border: none;
+    border-top: 1px dashed var(--border);
+    margin: 1.5rem 0;
+  }
+
+  /* warning callout */
+  .warn-callout {
+    background: var(--warn-soft);
+    border: 1px solid #d4a984;
+    border-radius: 3px;
+    padding: 0.7rem 1rem;
+    margin: 1rem 0;
+    font-size: 0.78rem;
+    color: var(--warn);
+  }
+
+  .warn-callout strong {
+    display: block;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+  }
+
+  /* copy btn */
+  .btn-copy {
+    margin-top: 1.5rem;
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    padding: 0.55rem 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-copy:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* error */
+  .error-card {
+    background: #fdf0f0;
+    border: 1px solid #e8b4b4;
+    border-radius: 4px;
+    padding: 1.2rem 1.5rem;
+    color: #8b2e2e;
+    font-size: 0.85rem;
+    display: none;
+  }
+
+  .error-card.visible { display: block; }
+
+  /* API key modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,14,13,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(4px);
+    display: none;
+  }
+
+  .modal-overlay.visible { display: flex; }
+
+  .modal {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 2rem;
+    width: 420px;
+    max-width: 90vw;
+  }
+
+  .modal h3 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .modal p {
+    color: var(--muted);
+    font-size: 0.82rem;
+    margin-bottom: 1.2rem;
+    line-height: 1.6;
+  }
+
+  .modal input {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+  }
+
+  .modal-btns {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .btn-primary {
+    flex: 1;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: 3px;
+    padding: 0.65rem 1rem;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .btn-primary:hover { opacity: 0.8; }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    padding: 0.65rem 1rem;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.82rem;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .btn-secondary:hover { border-color: var(--muted); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .container { grid-template-columns: 1fr; }
+    .sidebar { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="logo-block">
+    <div class="logo-main">Paper<span>Solve</span></div>
+    <div class="logo-sub">AKU-EB Engine</div>
+  </div>
+  <div class="header-tag">Notes from E-Marking Centre</div>
+  <div class="header-right">
+    </div>
+</header>
+
+<div class="container">
+  <aside class="sidebar">
+    <div class="panel">
+      <div class="panel-header">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span class="panel-title">Question Setup</span>
+      </div>
+      <div class="panel-body"> 
+        <div class="field">
+          <label>Subject</label>
+          <select id="subjectSelect" onchange="updateSource()">
+            <option value="">— select subject —</option>
+            <option value="physics">Physics</option>
+            <option value="mathematics">Mathematics</option>
+          </select>
+        </div>
+
+
+        <div class="field">
+          <label>Class / Level</label>
+          <select id="classSelect" onchange="updateSource()">
+            <option value="">— select class —</option>
+            <option value="9">Class 9 (SSC-I · Matric Part 1)</option>
+            <option value="10">Class 10 (SSC-II · Matric)</option>
+            <option value="11">Class 11 (HSSC-I · FSc Part 1)</option>
+            <option value="12">Class 12 (HSSC-II · FSc Part 2)</option>
+          </select>
+        </div>
+
+        <div id="sourceIndicator" class="source-indicator">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="sourceText"></span>
+        </div>
+
+        <div class="marks-row">
+          <div class="field">
+            <label>Total Marks</label>
+            <select id="marksTotal">
+              <option value="2">2 marks</option>
+              <option value="3" selected>3 marks</option>
+              <option value="6">6 marks</option>
+              <option value="7">7 marks</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Q. Type</label>
+            <select id="qType">
+              <option value="crq">CRQ</option>
+              <option value="erq">ERQ</option>
+              <option value="mcq">MCQ</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field" id="customMarksField" style="display:none">
+          <label>Custom Mark Value</label>
+          <input type="number" id="customMarks" min="1" max="20" value="5">
+        </div>
+
+        <div class="field">
+          <label>Question</label>
+          <textarea id="questionInput" placeholder="Paste the exam question here…&#10;&#10;e.g. If an object is placed at a distance of 2 cm from a convex mirror of focal length 4 cm, find the position of the image formed."></textarea>
+        </div>
+
+        <button class="btn-solve" id="solveBtn" onclick="generateAnswer()">
+          <div class="spinner" id="spinner"></div>
+          <span id="solveBtnText">Generate Board Answer</span>
+        </button>
+      </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Welcome -->
+    <div class="welcome" id="welcomeCard">
+      <div class="welcome-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c8401a" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+      </div>
+      <h2>Board-Style Answers, Instantly</h2>
+      <p>Select your subject and class, paste a question, and get a complete model answer calibrated to AKU-EB / BISE marking schemes — referencing the actual 2025 E-Marking Notes examiners use.</p>
+      <div class="feature-pills">
+        <span class="pill">Physics IX — 2025</span>
+        <span class="pill">Physics X — 2025</span>
+        <span class="pill">Physics XI — 2025</span>
+        <span class="pill">Physics XII — 2025</span>
+        <span class="pill">Marking Hints aware</span>
+        <span class="pill">SLO-aligned</span>
+        <span class="pill">Common errors flagged</span>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div class="error-card" id="errorCard"></div>
+
+    <!-- Answer Card -->
+    <div class="answer-card" id="answerCard">
+      <div class="answer-header">
+        <div class="answer-header-left">
+          <div>
+            <div class="answer-label">Model Answer</div>
+            <div class="answer-title" id="answerTitle">—</div>
+          </div>
+        </div>
+        <div class="marks-badge" id="answerMarksBadge">— marks</div>
+      </div>
+      <div class="source-banner" id="sourceBanner">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <span id="sourceBannerText">Calibrated against AKU-EB E-Marking Notes 2025</span>
+      </div>
+      <div class="answer-body">
+        <div class="answer-content" id="answerContent"></div>
+        <button class="btn-copy" onclick="copyAnswer()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copy Answer Text
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// E-MARKING NOTES — KNOWLEDGE BASE
+// Each key maps to the PDF content for that class
+// ═══════════════════════════════════════════════
+
+const EMARKING_KNOWLEDGE = {
+  mathematics_9: `
+## AKU-EB SSC-I Mathematics — E-Marking Notes 2025 (Class 9)
+
+SOURCE: Notes from E-Marking Centre on SSC-I Mathematics Annual Examinations 2025
+
+### GENERAL OBSERVATIONS
+Strong areas: Basic matrix configuration, algebraic expansion properties, computing standard logarithms, linear equation isolation.
+Weak/challenging areas: Factoring higher-order structures, computing matrix inversions, simultaneous equations through Cramer's rule, and logical geometry proof sequences.
+Key gap: Sign-switching errors during basic transposition, forgetting the definition of non-singular matrices, and skipping explicit verification checkpoints.
+
+---
+
+### Q1 — Cramer’s Rule & Matrix Equations (SLO 1.6.2) — 6 marks
+**Question:** Solve the system of equations using Cramer's rule or matrix inversion: ax + by = m and cx + dy = n.
+**Checking Hints:** 1 mark for correct matrix form | 1 mark for det(A) | 2 marks for det(Ax) and det(Ay) | 2 marks for final x and y isolation.
+**Better responses:** Calculated det(A) first, stated explicitly that det(A) ≠ 0 proving the system is solvable, followed by isolated determinant computations for x and y.
+**Weaker responses:** Substituted coefficients into the wrong spots for det(Ax), dropped signs during cross-multiplication, or did not check if the matrix was singular.
+
+### Q2 — Logarithmic Laws (SLO 3.4.1) — 4 marks
+**Question:** Simplify using logarithm laws: log_a(x * y / z).
+**Checking Hints:** 1 mark for converting multiplication to addition | 1 mark for converting division to subtraction | 2 marks for power-coefficient reductions.
+**Better responses:** Expanded expressions step-by-step with parenthetical tracking of minus signs across complex denominators.
+**Weaker responses:** Evaluated log(x) * log(y) instead of converting to log(x) + log(y), violating structural log rules.
+
+### Q3 — Algebraic Identities (SLO 4.2.1) — 4 marks
+**Question:** Find value of a² + b² given values for (a + b) and (a - b).
+**Checking Hints:** 1 mark for correct identity citation | 2 marks for algebraic substitution | 1 mark for arithmetic calculation.
+**Better responses:** Correctly isolated variables via the identity: 2(a² + b²) = (a + b)² + (a - b)².
+**Weaker responses:** Squaring individual components incorrectly (e.g., miscalculating (a+b)² as a² + b² without the middle term).
+
+### Q4 — Congruent Triangles Theorem (SLO 10.1.1) — 5 marks
+**Question:** Complete the geometric proof showing two triangles are congruent using a formal Statement-Reason table.
+**Checking Hints:** 1 mark for given/to-prove outline | 3 marks for core step-by-step congruence linkages | 1 mark for concluding theorem verification.
+**Better responses:** Structured proof step-by-step using precise geometric symbols (≅, ∠, Δ) and properly mapped structural correspondences (e.g., S.A.S).
+**Weaker responses:** Mixed statements and reasons within the same column or stated triangles were congruent without matching side-angle-side prerequisites.
+  `,
+
+  mathematics_10: `
+## AKU-EB SSC-II Mathematics — E-Marking Notes 2024 (Class 10)
+
+SOURCE: Notes from E-Marking Centre on SSC-II Mathematics Annual Examinations 2024
+
+### GENERAL OBSERVATIONS
+Strong areas: Executing basic set intersections, identifying direct variation paths, evaluating simple trigonometric identities.
+Weak/challenging areas: Working with synthetic division, solving partial fraction decompositions, sketching precise Venn Diagrams, and applying the Componendo-Dividendo theorem.
+Key gap: Omitting the ± symbol when clearing quadratic squares, failing to establish the proper constants for variations, and using universal set structures incorrectly.
+
+---
+
+### Q1 — Synthetic Division & Higher Roots (SLO 2.2.1) — 4 marks
+**Question:** Solve a cubic equation using synthetic division given one of its roots.
+**Checking Hints:** 1 mark for correct synthetic row execution | 1 mark for isolating the depressed quadratic equation | 2 marks for factoring remaining roots.
+**Better responses:** Brought down the leading coefficient accurately, performed matching multiplications, and solved the resulting quadratic equation completely.
+**Weaker responses:** Added terms incorrectly during columns processing or tracking sign changes inside the synthetic tableau.
+
+### Q2 — Componendo-Dividendo Component (SLO 3.1.4) — 5 marks
+**Question:** Apply the component-dividend theorem to solve complex rational radical equations.
+**Checking Hints:** 2 marks for setting up the proper ratio structure (Numerator + Denominator) / (Numerator - Denominator) | 2 marks for simplifying algebraic expressions | 1 mark for isolating the root.
+**Better responses:** Monitored negative distributions safely by using brackets around the subtracted denominator expressions.
+**Weaker responses:** Subtracted terms without reversing internal signs, leading to incorrect calculations.
+
+### Q3 — Partial Fractions Decomposition (SLO 4.1.1) — 6 marks
+**Question:** Resolve polynomial structures into partial fraction sets with linear non-repeated denominators.
+**Checking Hints:** 1 mark for setting up form A/(x-a) + B/(x-b) | 2 marks for clearing fraction formats safely | 2 marks for evaluating constants | 1 mark for assembling the final solution string.
+**Better responses:** Substituted roots of the denominator directly into the equation to quickly find constants A and B.
+**Weaker responses:** Attempted complex expansion systems that produced unsolvable linear networks, or failed to check if the fraction was proper.
+
+### Q4 — Set Theory & Venn Diagrams (SLO 5.1.2) — 4 marks
+**Question:** Verify De Morgan’s Laws using visual Venn Diagram proofs.
+**Checking Hints:** 1 mark for drawing the correct universal bounding box | 1 mark for intersecting subset design | 2 marks for accurate shading of target compliment zones.
+**Better responses:** Created separate diagrams for the left-hand side (LHS) and right-hand side (RHS) to clearly show they matched.
+**Weaker responses:** Forgot to include the universal frame boundary rectangle, or shaded internal intersection points instead of complement spaces.
+  `,
+
+  mathematics_11: `
+## AKU-EB HSSC-I Mathematics — E-Marking Notes 2025 (Class 11)
+
+SOURCE: Notes from E-Marking Centre on HSSC-I Mathematics Annual Examinations 2025
+
+### GENERAL OBSERVATIONS
+Strong areas: Evaluating complex number conjugates, tracking arithmetic sequences, basic matrix additions, and calculating scalar dot products.
+Weak/challenging areas: Computing matrix inverse profiles via multi-step cofactor methods, evaluating cube roots of unity properties, managing mathematical induction workflows, and applying conditional trigonometric identities.
+Key gap: Getting confused by the properties of imaginary indicators (i² vs i³), omitting inductive base steps, and misapplying half-angle identities.
+
+---
+
+### Q1 — Matrix Inversion via Cofactors (SLO 2.4.2) — 6 marks
+**Question:** Compute the inverse matrix A⁻¹ utilizing the adj(A)/det(A) approach for a 3x3 array.
+**Checking Hints:** 1 mark for det(A) verification | 3 marks for completing the 9 cofactor signs matrix | 1 mark for transpose to find Adj(A) | 1 mark for final compilation.
+**Better responses:** Systematically calculated each 2x2 sub-determinant while correctly matching sign patterns according to the checkerboard rule: (-1)^(i+j).
+**Weaker responses:** Swapped transpose steps or dropped signs when computing sub-determinant values.
+
+### Q2 — Properties of Cube Roots of Unity (SLO 4.2.3) — 4 marks
+**Question:** Prove complex polynomial identities using the cube root properties: 1 + ω + ω² = 0 and ω³ = 1.
+**Checking Hints:** 2 marks for grouping terms to substitute -ω or -ω² identities | 2 marks for simplifying higher-power omega components.
+**Better responses:** Structured expressions into manageable powers of three (e.g., ω^3k = 1) before substituting terms.
+**Weaker responses:** Replaced addition sequences with incorrect multiplication expressions, making the proof impossible to solve.
+
+### Q3 — Mathematical Induction Proofs (SLO 8.1.1) — 5 marks
+**Question:** Prove a summation series formula for n terms using mathematical induction principles.
+**Checking Hints:** 1 mark for checking base step n=1 | 1 mark for setting up the hypothesis n=k | 2 marks for adding term (k+1) to both sides | 1 mark for final algebraic validation.
+**Better responses:** Explicitly stated inductive conditions, successfully factored out common terms from the k+1 step, and clearly verified the target expression format.
+**Weaker responses:** Added terms to only one side of the equation, or treated the inductive step as a simple calculation rather than a logical progression.
+
+### Q4 — Trigonometric Form Identities (SLO 10.3.2) — 5 marks
+**Question:** Prove that sin(5θ) - sin(3θ) / cos(5θ) + cos(3θ) = tan(θ) using sum-to-product identities.
+**Checking Hints:** 2 marks for applying the correct sum-to-product identity on top | 2 marks for applying the identity on the bottom | 1 mark for simplification.
+**Better responses:** Converted equations smoothly using product relations, leading to easy cancelations of terms.
+**Weaker responses:** Erroneously split expressions like sin(5θ) into 5·sin(θ), violating trigonometric functions syntax.
+  `,
+
+  mathematics_12: `
+## AKU-EB HSSC-II Mathematics — E-Marking Notes 2025 (Class 12)
+
+SOURCE: Notes from E-Marking Centre on HSSC-II Mathematics Annual Examinations 2025
+
+### GENERAL OBSERVATIONS
+Strong areas: Applying basic power rule differentiation, executing simple polynomial integration, evaluating basic limit expressions, and computing midpoints.
+Weak/challenging areas: Computing derivative values from first principles (ab initio method), setting up integration by parts, finding the intersections of tangent and normal paths, and optimization solutions using linear programming graphs.
+Key gap: Dropping the differential element 'dx' from integrals, forgetting to add the constant of integration (c), missing limits check requirements, and misidentifying feasible test coordinates.
+
+---
+
+### Q1 — Derivative from First Principles / Ab Initio (SLO 2.1.1) — 6 marks
+**Question:** Differentiate f(x) = 1/√(x) from first principles (ab initio method).
+**Checking Hints:** 1 mark for setting up basic increment f(x + Δx) | 2 marks for algebraic/rationalization reductions | 2 marks for applying binomial approximations or limit structures | 1 mark for final derivative evaluation.
+**Better responses:** Grouped terms cleanly, rationalized fractional expressions correctly, and factored out Δx from the numerator before applying the limit: lim (Δx -> 0).
+**Weaker responses:** Applied the shortcut power rule instead of the required step-by-step limits process, which scored zero marks for the derivation.
+
+### Q2 — Integration by Parts Method (SLO 3.4.1) — 5 marks
+**Question:** Evaluate the indefinite integral: ∫ x² * ln(x) dx.
+**Checking Hints:** 1 mark for choosing the correct first function using the ILATE rule | 2 marks for applying the integration by parts formula | 1 mark for completing the inner integral step | 1 mark for adding the integration constant (+ c).
+**Better responses:** Picked u = ln(x) and dv = x² dx according to the ILATE framework, keeping the parts organized throughout the solution.
+**Weaker responses:** Reversed function roles (trying to integrate ln(x) directly without a formula), or forgot to include the integration constant (+ c).
+
+### Q3 — Tangents and Normals to Conics (SLO 6.2.2) — 6 marks
+**Question:** Find the equations of the tangent and normal lines to a parabola or circle at a given point (x1, y1).
+**Checking Hints:** 2 marks for implicit differentiation to find dy/dx | 1 mark for finding the tangent slope (m) | 1 mark for the perpendicular normal slope (-1/m) | 2 marks for writing the final line equations.
+**Better responses:** Used implicit differentiation to find the derivative, substituted coordinates accurately, and wrote out the point-slope formulas clearly.
+**Weaker responses:** Used the tangent slope directly for the normal line equation, or miscalculated the negative reciprocal value.
+
+### Q4 — Linear Programming Constraints (SLO 5.2.1) — 6 marks
+**Question:** Maximize an objective function Z = ax + by subject to a set of linear inequalities.
+**Checking Hints:** 2 marks for finding line boundary intercepts | 2 marks for plotting equations and shading the correct feasible region via origin testing | 1 mark for locating all corner vertices | 1 mark for finding the maximum value.
+**Better responses:** Verified the origin (0,0) against inequalities to shade the correct region, calculated intersection points using simultaneous equations, and evaluated all corner points to find the maximum value.
+**Weaker responses:** Shaded the wrong side of constraint lines, or guessed corner coordinates from freehand drawings instead of calculating them algebraically.
+  `,
+  physics_9: `
+## AKU-EB SSC-I Physics — E-Marking Notes 2023 (Class 9)
+
+SOURCE: Notes from E-Marking Centre on SSC-I Physics Annual Examinations 2023
+
+### GENERAL OBSERVATIONS
+Strong areas: importance of physics, moment of force, Newton's law of gravitation, kinematics and dynamics.
+Weak/challenging areas: conversion of different scales of temperature, concept of efficiency and state of matter.
+Key gap: Students struggle with identifying the correct equation of motion and applying simple algebraic manipulations (like squaring values).
+
+---
+
+### Q1 — Importance of Physics (SLO 1.1.1) — 2 marks
+**Question:** Write any TWO points about the importance of physics in science and technology.
+**Checking Hints:** 1 mark for each point (Any 2 required)
+**Better responses:** Connected theory to practical application. Electric power (induced emf), lasers (atomic physics/medicine), electronics (solid state), automobiles (thermodynamics), radar (EM waves).
+**Weaker responses:** Wrote the definition of physics instead of discussing its uses. Provided irrelevant wording.
+
+### Q2 — Turning Effect of Force (SLO 4.1.2) — 3 marks
+**Question:** Write any THREE examples of turning effect of force from daily life.
+**Checking Hints:** 1 mark for each example (Any 3 required)
+**Better responses:** Pushing a swing, spanner rotating a nut, bottle opener lever, doorknob swinging on hinge, turning a steering wheel.
+**Weaker responses:** Wrote about clockwise/anticlockwise torque or equilibrium definitions instead of examples. Discussed energy conversions (e.g., heat into gases).
+
+### Q3 — Newton's Law of Gravitation (SLO 5.2.2) — 2 marks
+**Question:** Two identical balls (m1=m2), distance r. If distance doubled, derive equation to prove FG decreases one-fourth.
+**Checking Hints:** 1 mark for EACH mathematical step (2 required)
+**Better responses:** F1 = Gm²/r². Substituted 2r for distance: F_new = Gm²/(2r)² = Gm²/4r². Concluded F_new = 1/4 F1.
+**Weaker responses:** Confused "doubled" and "halved". Failed to square the '2' in (2r)². Mixed up with momentum or pulleys.
+
+### Q4 — Temperature Conversion (SLO 8.2.2) — 3 marks
+**Question:** Convert 100°F into °C and Kelvin (K).
+**Checking Hints:** 1 mark substituting values | 1 mark °C value | 1 mark K value
+**Better responses:** C = (100 - 32) / 1.8 = 37.77°C. K = 37.77 + 273 = 310.77 K.
+**Weaker responses:** Added 373 instead of 273 for Kelvin. Wrongly divided by 2. Applied incorrect formulas.
+
+### Q5 — Heat Transfer / Soldering Iron (SLOs 9.1.2, 9.2.1, 9.4.1) — 3 marks
+**Question:** (a) Why copper tip? (b) Why plastic handle? (c) Name heat transfer process.
+**Checking Hints:** 1 mark for each part (3 required)
+**Better responses:** (a) Copper is a good conductor of heat. (b) Plastic is a bad conductor/insulator. (c) Conduction.
+**Weaker responses:** Used irrelevant terms like "cut" or "slip". Confused different heat transfer methods.
+
+### Q6a — Kinematics Word Problem (SLO 2.9.2) — 6 marks
+**Question:** Helicopter ascending at 20 m/s. Height 60m. Packet dropped. g=10 m/s². Find time to reach ground.
+**Checking Hints:** 1 mark data | 5 marks mathematical steps
+**Better responses:** Data: Vi=20 m/s, h=60m, g=10m/s². Equation 1: 2gh = Vf² - Vi² → 2(10)(60) = Vf² - 400 → Vf = 40 m/s. Equation 2: Vf = Vi + gt → 40 = 20 + 10t → t = 2s.
+**Weaker responses:** Struggled to choose correct equation. Confused initial and final velocities. Calculation errors.
+
+### Q6b — Momentum Calculation (SLO 3.2.3) — 6 marks
+**Question:** Force = 1000 N, time = 10 s. Calculate momentum of bus.
+**Checking Hints:** 5 marks mathematical steps | 1 mark correct SI unit
+**Better responses:** ΔP = F × t = 1000 × 10 = 10000 N·s. Showed derivation from F = ma = m(vf - vi)/t.
+**Weaker responses:** Calculated weight instead. Discussed unrelated concepts like equilibrium. Failed to include SI unit (N·s or kg·m/s).
+
+### Q7a — Machine Efficiency (SLO 6.5.3) — 6 marks
+**Question:** Explain in SIX points why machines cannot give 100% efficiency.
+**Checking Hints:** 1 mark for each point (6 required)
+**Better responses:** 1. Work against gravity. 2. Friction always exists. 3. Energy lost as heat/sound. 4. Output energy always less than input. 5. Energy used to change internal energy of system. 6. Total energy cannot convert completely to external work.
+**Weaker responses:** Wrote about advantages/disadvantages of machines, lack of fuel/electricity, or mechanical breakdowns.
+
+### Q7b — Plasma State of Matter (SLO 7.1.2) — 6 marks
+**Question:** Describe fourth state of matter 'plasma' in SIX points.
+**Checking Hints:** 1 mark for each point (6 required)
+**Better responses:** 1. Comprised of ions and electrons. 2. Highly electrically conductive. 3. Responds to magnetic/electric fields. 4. Assumes volume of container (like gas). 5. Overall charge is typically neutral. 6. Formed by heating gas to intense temperatures.
+**Weaker responses:** Described all four states of matter instead of focusing on plasma. Repeated points. Treated liquid and plasma as the same.
+  `,
+
+  physics_10: `
+## AKU-EB SSC-II Physics — E-Marking Notes 2025 (Class 10)
+
+SOURCE: Notes from E-Marking Centre on SSC-II Physics Annual Examinations 2025
+
+### GENERAL OBSERVATIONS
+Candidates demonstrated WEAK understanding in: image location by spherical mirror, electromagnetism, information and communication technology, half-life of radioactive elements, waves, and electrostatics.
+Better performance (but still needs improvement): logic gates, audible frequency range.
+
+### MARKING PHILOSOPHY
+- Marks relate to answer space — longer ≠ higher marks
+- Refer to command word guide for expectations
+- Candidates must integrate knowledge, understanding AND application
+
+---
+
+### Q1 — Convex Mirror / Image Location (SLO 12.2.1) — 3 marks
+**Question type:** Solve word problems using mirror formula
+**Checking Hints:** 1 mark correct formula | 1 mark correct substitution | 1 mark correct answer
+**Better responses:** Applied mirror formula (1/f = 1/p + 1/q), maintained proper sign conventions, got q = −4 cm for object 2cm, focal length 4cm convex mirror. Step-by-step with units.
+**Weaker responses:** Used irrelevant formulas (pendulum, Newton's 2nd law, power of lens, frequency-wavelength, transformer, capacitor). Multiplied values randomly (4×2=8). Forgot sign conventions for convex mirrors.
+**Key:** For convex mirror, f is POSITIVE, image is VIRTUAL (q negative). Sign convention must be stated.
+
+### Q2 — Single Electron Magnetic Field (SLO 12.2.1) — 3 marks
+**Question:** Condition for single electron to generate magnetic field + weak or strong?
+**Checking Hints:** 1 mark condition (2 required) | 1 mark weak/strong answer
+**Better responses:** "Electron should be moving in conductor" / "current passing through electron" → weak field
+**Weaker responses:** Said positive charge creates strong field, described mutual induction (multi-electron phenomenon), referenced thermionic emission without explaining motion.
+**Key facts:** Only MOVING charges create magnetic fields. Single electron → WEAK field. Terms like "induction" or "charge attraction" are irrelevant.
+
+### Q3 — Uses of Logic Gates (SLO 16.8.3) — 2 marks
+**Checking Hints:** 1 mark per use (any 2)
+**Better responses:** Microprocessors for arithmetic operations, communication systems for signal direction, computers, security alarms, calculators, kitchen appliances
+**Weaker responses:** Listed gate TYPES (NOR, NAND, OR, NOT) without explaining uses — NO MARKS for this
+**Key:** Must give real-world APPLICATION, not just name gate types
+
+### Q4 — Optical Fibre Light Transmission (SLO 17.2.1) — 2 marks
+**Checking Hints:** 1 mark incomplete description | 2 marks complete description
+**Better responses:** Core/cladding structure, total internal reflection when incident angle > critical angle, light enters from one end and reflects to other end
+**Weaker responses:** Said light transmitted by "deflecting electrons", "charge defects", confused with copper wire, mentioned battery-powered transmission, mentioned radioactivity
+**Key terms:** core, cladding, total internal reflection, critical angle, refractive index
+
+### Q5 — Radioactive Half-Life Calculation (SLO 18.5.2) — 3 marks
+**Checking Hints:** 1 mark formula | 1 mark substitution | 1 mark answer
+**Better responses:** N = N₀ × (1/2)^t correctly applied. For 10 half-lives: N = X × (1/2)^10 = X/1024. Showed step-by-step: X → X/2 → X/4 → ... → X/1024
+**Weaker responses:** Used N = N₀ × 12t (nonsensical). Calculated 10/2 = 5 (linear subtraction). Confused decay with element transformation.
+**Key:** Radioactive decay is EXPONENTIAL not linear. Formula: N = N₀ × (½)^n where n = number of half-lives
+
+### Q6a — Transverse vs Longitudinal Waves (SLO 10.2.3) — 6 marks
+**Checking Hints:** 1 mark transverse ID | 1 mark longitudinal ID | 1 mark each difference (4 required)
+**Better responses:** Table format with 4 key differences: direction of particle motion (perpendicular vs parallel), presence of compressions/rarefaction, wave speed comparisons, medium requirements
+**Weaker responses:** Confused mechanical/electromagnetic with transverse/longitudinal. Said "ultrasonic waves" are transverse (wrong). Listed "radiation waves" as longitudinal.
+**Key differences:** Transverse: particle motion perpendicular to wave direction, has crests/troughs. Longitudinal: particle motion parallel to wave direction, has compressions/rarefactions.
+
+### Q6b — Ultrasound Uses (SLO 11.4.2) — 6 marks
+**Checking Hints:** 1 mark correct name | 1 mark each use (any 5)
+**Better responses:** Medical imaging, detecting kidney stones, measuring sea depth (SONAR), echolocation
+**Weaker responses:** Described waves in rope/wire (transverse/longitudinal), compression and rarefaction, confused pitch and loudness with ultrasound, "long-wavelength waves" (wrong — ultrasound is HIGH frequency, SHORT wavelength)
+
+### Q7a — Electrostatic Induction Hazards (SLO 13.1.2) — 6 marks
+**Checking Hints:** 1 mark identification | 1 mark each hazard (any 5)
+**Phenomenon:** Electrostatic induction (charge separation when charged body approaches conductor)
+**Better responses:** Named electrostatic induction correctly, listed: petrol pump explosions, vehicle friction causing sparks, heavy object displacement friction, fire extinguisher flammable gas issue
+**Weaker responses:** Said "nuclear fusion", "mutual intention", confused electrons with protons, gave irrelevant hazards (crop failure, economic losses), confused with magnetism
+
+### Q7b — Circuit Component Labeling (SLO 14.8.1) — 6 marks
+**Circuit contains:** Variable resistor, fixed resistor, voltmeter, ammeter, battery, switch/key
+**Checking Hints:** 1 mark each label (any 4) | 1 mark each use (4 required)
+**Better responses:** Correct labels + functions: variable resistor (adjust resistance), fixed resistor (provide fixed resistance), voltmeter (measure potential difference, connected in parallel), ammeter (measure current, connected in series), switch (open/close circuit)
+**Weaker responses:** Called resistors "current", labeled voltmeter as "capacitor" or "bulb", repeated definitions without function
+  `,
+
+  physics_11: `
+## AKU-EB HSSC-I Physics — E-Marking Notes 2025 (Class 11)
+
+SOURCE: Notes from E-Marking Centre on HSSC-I Physics Annual Examinations 2025
+
+### GENERAL OBSERVATIONS
+Strong areas: power, thermodynamics, simple harmonic motion, interference of light
+Weak/challenging areas: Carnot engine, wave motion, escape velocity, equation of continuity, artificial satellites, weightlessness
+Key gap: Students struggle to JUSTIFY assumptions and articulate derivations systematically. Need to extract/interpret given data and maintain unit consistency.
+
+---
+
+### Q1 — Dimensional Analysis of Gravitational Force (SLO 1.6.2) — 3 marks
+**F = G(m₁m₂)/r² dimensional verification**
+**Checking Hints:** 1 mark LHS | 1 mark substituting RHS | 1 mark RHS same dimension
+**Better responses:** LHS: F = ma → [MLT⁻²]. G dimension derived as [M⁻¹L³T⁻²]. RHS: [M⁻¹L³T⁻²][M][M]/[L²] = [MLT⁻²]. Both sides equal ✓
+**Weaker responses:** Treated G as dimensionless ("G is constant so no dimension"). Gave Force dimension as M²L⁻². Missing derivation steps.
+**Key:** G has dimension [M⁻¹L³T⁻²] — must be derived, not assumed dimensionless!
+
+### Q2 — Vector Addition Head-to-Tail (SLO 2.2.1) — 2 marks
+**Can vectors be placed in any order? Justify.**
+**Checking Hints:** 1 mark YES | 1 mark correct justification
+**Better responses:** YES, because commutative property: A+B = B+A. Order does not affect resultant.
+**Weaker responses:** Said "cannot be placed in any order" — WRONG. Used definition of head-to-tail rule instead of commutative/associative law.
+
+### Q3 — Projectile Maximum Height (SLO 3.6.4) — 3 marks
+**θ=30°, v=100 m/s, g=10 m/s², find max height**
+**Checking Hints:** 1 mark formula | 1 mark substitution | 1 mark answer
+**Correct formula:** H = v²sin²θ / 2g = (100)²(sin30°)² / 2(10) = 10000 × 0.25 / 20 = 125 m
+**Better responses:** Used H = v²sin²θ/2g, sin²30° = 0.25, answer = 125 m
+**Weaker responses:** Used RANGE formula R = v²sin2θ/g instead of HEIGHT formula. sin(30)/10 = 5m (wrong, didn't square).
+**Common error:** Confusing range formula with height formula. sin²30° = 0.25 NOT sin30° = 0.5
+
+### Q4 — Weightlessness in Satellites (SLO 5.6.1) — 2 marks
+**Two reasons astronauts feel weightless**
+**Checking Hints:** 1 mark each highlighted statement (2 required)
+**Better responses:** (1) Satellite is in state of free-fall (2) Astronauts experience no contact/normal force from satellite
+**Weaker responses:** "Space lacks gravity" — WRONG. Satellites orbit BECAUSE of gravity! Said "satellites do not have gravity."
+**Key concept:** Weightlessness = apparent weightlessness due to CONTINUOUS FREE-FALL under gravity's influence. NOT absence of gravity. Earth's gravitational pull provides centripetal force.
+
+### Q5 — Bernoulli's Equation Fluid Problem (SLO 6.2.3) — 3 marks
+**Juice factory: v₁=3m/s, P₁=120000Pa, v₂=7m/s, ρ=1050kg/m³, find P₂**
+**Checking Hints:** 1 mark formula | 1 mark substitution | 1 mark answer
+**Correct formula:** P₁ + ½ρv₁² = P₂ + ½ρv₂²
+**Solution:** 120000 + ½(1050)(9) = P₂ + ½(1050)(49) → P₂ = 120000 + 4725 − 25725 = 99000 Pa
+**Better responses:** Correct Bernoulli application, included density, proper algebraic steps
+**Weaker responses:** Used gas law P₁V₁=P₂V₂ (WRONG — this is for gas, not fluid flow!). Omitted density term. Confused volume with velocity.
+
+### Q6 — SHM Acceleration (SLO 7.1.1) — 2 marks
+**Explain why acceleration is not constant in SHM**
+**Checking Hints:** 1 mark each highlighted statement (2 required)
+**Better responses:** F = -kx (Hooke's Law) → F = ma → a = -kx/m → a ∝ -x. Displacement varies → acceleration varies. Not constant because directly proportional to displacement.
+**Weaker responses:** Said gravity causes non-constant acceleration. Included irrelevant formula T=2π√(L/g).
+
+### Q7 — Standing Waves (SLO 8.1.6) — 3 marks
+**4 loops, L=2.0m, f=120Hz**
+**(a) wavelength (b) speed (c) effect of more loops**
+**Better responses:** 
+  (a) λ = 2L/n = 2(2.0)/4 = 1 m
+  (b) v = fλ = 120 × 1 = 120 m/s
+  (c) More loops → shorter wavelength, higher frequency; speed stays CONSTANT (v = fλ, velocity depends on tension/medium, not frequency)
+**Weaker responses:** Used √λ = 2 (wrong derivation). Said more loops INCREASE velocity (wrong — speed constant for given medium/tension). Said more loops DECREASE frequency (wrong — frequency INCREASES).
+
+### Q8 — Young's Double Slit (SLO 9.2.5) — 3 marks
+**How does slit separation d affect fringe spacing y?**
+**Checking Hints:** 1 mark formula | 1 mark relation | 1 mark explanation
+**Better responses:** y = λL/d. Therefore y ∝ 1/d — INVERSE relationship. Increasing d DECREASES fringe spacing.
+**Weaker responses:** Said d directly proportional to y (WRONG). Used angular maxima formula d sinθ = nλ instead of fringe spacing formula.
+**Key:** y = λL/d means increasing slit separation DECREASES fringe width
+
+### Q9a — Power Calculation (SLO 4.3.3) — 7 marks
+**Runner 60kg, 440m building, 15 minutes**
+**Better responses:** W=mgh=60×10×440=264000J. t=15×60=900s. P=W/t=264000/900=293.33W
+**Weaker responses:** Used momentum P=mv instead of power P=mgh/t. Didn't convert minutes to seconds.
+
+### Q9b — Saturn Escape Velocity (SLO 4.7.3) — 7 marks
+**Earth escape = 11.2 km/s. Saturn: M=100×Earth, R=10×Earth**
+**Better responses:** v_esc = √(2GM/R). For Saturn: v_s/v_e = √(100/10) = √10. v_s = 11.2√10 = 35.4 km/s
+**Weaker responses:** Substituted raw numbers without relating to Earth's values. Unit inconsistency (m/s vs km/s). Skipped G value derivation.
+
+### Q10a — Cp vs Cv Derivation (SLO 10.6.3) — 7 marks
+**Show Cp > Cv using 1st law thermodynamics**
+**Better responses:** At const. volume: ΔQ = ΔU = CᵥΔT. At const. pressure: ΔQ = CₚΔT = ΔU + pΔV. So CₚΔT = CᵥΔT + pΔV. Using ideal gas: pΔV = RΔT. Therefore Cₚ - Cᵥ = R. Since R>0, Cₚ>Cᵥ.
+**Physical meaning:** At constant pressure, heat does TWO things: increases internal energy AND does work → needs more heat → Cₚ larger
+
+### Q10b — Carnot Engine (SLO 10.9.3) — 7 marks
+**Copper engine, 88% efficiency, copper melting=1083°C, exhaust=27°C**
+**Better responses:** η = (1 - T₂/T₁) × 100. T₂=300K. 88 = (1-300/T₁)×100 → T₁=2500K=2227°C. Copper melts at 1083°C < 2227°C → IMPOSSIBLE. Do NOT invest.
+**Weaker responses:** No temp conversion to Kelvin. Accepted the claim without calculating. Didn't compare required T₁ with copper's melting point.
+  `,
+
+  physics_12: `
+## AKU-EB HSSC-II Physics — E-Marking Notes 2025 (Class 12)
+
+SOURCE: Notes from E-Marking Centre on HSSC-II Physics Annual Examinations 2025
+
+### GENERAL OBSERVATIONS
+Strong: amplitude/frequency modulation, elastic/plastic deformation basics
+Average: forward/reverse bias
+Weak/needs improvement: capacitance, electromagnetism, AC/DC generators, DC motors, inner shell transitions, nuclear reactors, carbon resistance, power dissipation, photoelectric effect, Compton's effect
+
+---
+
+### Q1 — Equivalent Capacitance (SLO 11.7.2) — 3 marks
+**C₁=X, C₂=2X in parallel, then series with C₃=3X**
+**Checking Hints:** 1 mark formula | 1 mark series value | 1 mark parallel value
+**Better responses:** C₁ and C₂ parallel: C₁₂ = X + 2X = 3X. Then C₁₂ series with C₃: 1/Cₑ = 1/3X + 1/3X = 2/3X → Cₑ = 3X/2 = 1.5X
+**Weaker responses:** Treated reciprocal series as parallel addition. Applied parallel formula to series combination. Only solved one combination.
+**Key rule:** Parallel: Cₑq = C₁+C₂. Series: 1/Cₑq = 1/C₁ + 1/C₂
+
+### Q2 — Magnetic Force on Moving Charge (SLO 13.2.1) — 3 marks
+**Derive F = qvB from F = ILB for electron in metallic strip**
+**Checking Hints:** 1 mark F=ILBsinθ | 1 mark I=q/t | 1 mark F=qvB
+**Better responses:** Start F=ILBsinθ. Substitute I=ΔQ/Δt, ΔQ=nqAL, Δt=L/v. F=nqAL(LxB)/L/v = nqAv(LxB). Single particle: F=q(v×B). For electron: F=-e(v×B).
+**Weaker responses:** Stated formula without derivation. Introduced irrelevant e/m ratio. Used angle incorrectly in cross product. Ignored diagram showing electron motion direction.
+
+### Q3 — Energy Stored in Inductor (SLO 14.4.1) — 3 marks
+**Derive U = ½LI²**
+**Checking Hints:** 1 mark each highlighted step (3 required)
+**Better responses:** ε=LΔI/Δt. Work done: E=qV=qεΔt/Δt. Average current=I/2. E = LΔI × (I/2) = ½LI²
+**Weaker responses:** Used CAPACITOR formula U=½CV² instead of inductor. Included irrelevant AC circuit discussions. Stated formula without derivation. Jumbled expressions.
+**Key:** U = ½LI² for inductor. Compare: U = ½CV² for capacitor. Don't confuse!
+
+### Q4 — Types of Modulation (SLO 15.53) — 2 marks
+**State and explain AM and FM**
+**Checking Hints:** 1 mark AM | 1 mark FM
+**Better responses:** AM: amplitude of carrier wave increases/decreases as amplitude of modulating signal increases/decreases (frequency stays constant). FM: frequency of carrier wave varies as amplitude of modulating signal varies (amplitude stays constant).
+**Weaker responses:** Confused "modulation" with "modulus of elasticity" — described Young's modulus and Bulk modulus instead. Mixed up which parameter changes in AM vs FM.
+
+### Q5 — Elastic vs Plastic Deformation (SLO 16.2.1) — 2 marks
+**Two differences between elastic and plastic deformation**
+**Checking Hints:** 1 mark each difference (any 2)
+**Better responses:** 
+  1. Elastic: temporary/reversible (returns to original shape). Plastic: permanent (doesn't return)
+  2. Elastic: obeys Hooke's Law (within proportional limit, stress ∝ strain). Plastic: beyond proportional limit, non-linear stress-strain.
+  3. Elastic: linear region on stress-strain graph. Plastic: non-linear region
+**Weaker responses:** Called elastic "soft/easy" and plastic "hard" — NO SCIENTIFIC BASIS. Repeated same idea in different words.
+**Key terms:** reversible, permanent, Hooke's Law, proportional limit, yield point
+
+### Q6 — Forward and Reverse Bias (SLO 17.2.5) — 3 marks
+**Describe two biasing types of p-n junction diode**
+**Checking Hints:** 1 mark correct name | 1 mark description each (2 required)
+**Better responses:** Forward bias: +ve terminal to p-side, -ve to n-side → depletion region narrows → current flows. Reverse bias: +ve to n-side, -ve to p-side → depletion region widens → no current (only tiny leakage).
+**Weaker responses:** Only stated terminal connections without explaining depletion region or current flow. Confused forward/reverse. Discussed DOPING (pentavalent/trivalent atoms) — irrelevant, that's manufacturing not biasing!
+
+### Q7 — Inner Shell Transitions / Characteristic X-rays (SLO 19.4.1) — 2 marks
+**Explain emission of characteristic X-rays via inner shell transitions**
+**Note:** 1 mark if ONLY characteristics of X-rays mentioned (travel straight, penetrate matter, etc.)
+**Checking Hints:** 1 mark each point (2 required)
+**Better responses:** High-energy electrons hit metal target → eject K-shell electron → vacancy created → higher shell electron (L or M) falls down to fill vacancy → energy difference released as X-ray photon → photon energy specific to target material = characteristic X-ray
+**Weaker responses:** Only listed X-ray properties (travel in straight line, strong penetrating power) without explaining inner shell transition process. Confused emission with absorption.
+
+### Q8 — Nuclear Reactor Electricity Generation (SLO 20.9.1) — 3 marks
+**3 steps: how nuclear reactor generates electricity**
+**Checking Hints:** 1 mark each point (3 required)
+**Better responses:** Step 1: Nuclear fission of U-235 in reactor core releases thermal energy (moderator slows neutrons, control rods absorb excess neutrons). Step 2: Coolant transfers heat to heat exchanger → produces steam. Step 3: Steam drives turbine → generator → electricity.
+**Weaker responses:** Said "chemical energy" instead of nuclear fission. Described fusion instead of fission. Skipped turbine/generator steps. Didn't explain coolant or heat exchanger roles.
+
+### Q9a — Wheatstone Bridge (SLO 12.3.6) — 7 marks
+**Draw circuit + derive R₁/R₂ = R₃/R₄**
+**Checking Hints:** 3 marks diagram (resistors, galvanometer, power source, current direction) + 3 marks derivation steps
+**Better responses:** Correct diamond-shaped circuit with 4 resistors, galvanometer across midpoints, power supply across outer nodes, current directions shown. Kirchhoff's voltage law applied to two loops: when galvanometer reads 0, I₁=I₂=I, derived R₁/R₂ = R₃/R₄.
+**Weaker responses:** Drew BRIDGE RECTIFIER instead of Wheatstone bridge (common major error!). Misplaced galvanometer. Didn't indicate current direction. Skipped Kirchhoff's law application.
+
+### Q9b — Internal Resistance & Power Dissipation (SLO 12.4.6) — 7 marks
+**EMF=2V, two 12Ω in parallel, voltmeter reads 1.6V. Find r and P.**
+**Checking Hints:** 4 marks diagram + 3 marks calculation steps
+**Better responses:** 
+  - Parallel: 1/Rₑ = 1/12 + 1/12 → Rₑ = 6Ω
+  - I = V/Rₑ = 1.6/6 = 0.267A
+  - EMF = V + Ir → 2.0 = 1.6 + 0.267r → r = 0.4/0.267 ≈ 1.5Ω
+  - P = I²r = (0.267)² × 1.5 ≈ 0.107W
+**Weaker responses:** Drew resistors in series (not parallel). Confused terminal voltage with EMF. Used wrong Ohm's law form. Incorrect parallel combination formula.
+
+### Q10a — Photoelectric Effect vs Classical Theory (SLO 18.3.2) — 7 marks
+**Why classical theory fails to explain threshold frequency and intensity-current relationship**
+**Checking Hints:** 1 mark each point (7 required)
+**Better responses:** 
+  Threshold frequency: Classical theory predicts any frequency with sufficient intensity should eject electrons. Experiment shows NO ejection below threshold regardless of intensity → classical theory FAILS.
+  Intensity-current: Classical theory says more intensity = more energy per electron = higher KE. Experiment shows more intensity = more photons = more electrons (higher CURRENT) but KE stays same → classical fails again.
+  Einstein's quantum: photon interacts with ONE electron. E=hf. If f < threshold, even high intensity cannot eject. More intensity = more photons = more electrons = more current.
+**Weaker responses:** Defined photoelectric effect without addressing WHY classical fails. Said "intensity affects KE" — wrong, intensity affects CURRENT not KE.
+
+### Q10b — Inertial vs Non-Inertial Frames (SLO 18.4.2) — 7 marks
+**Define + show Earth as both inertial and non-inertial**
+**Checking Hints:** 1 mark each definition (2) + 2 marks inertial + 3 marks non-inertial
+**Better responses:** Inertial: frame at rest or constant velocity where Newton's 1st law holds, no fictitious forces. Non-inertial: accelerating frame where fictitious forces needed. Earth: non-inertial (rotates + revolves = centripetal acceleration); BUT centripetal acceleration is tiny (huge radius) → approximated as inertial for everyday purposes. Large-scale: Coriolis force makes it non-inertial.
+**Weaker responses:** Said "inertia frame = uses inertia" — circular reasoning. Only stated Earth is one type without justification. Confused inertia with frame of reference.
+  `
+};
+
+// ════════════════════════════════════════════════════
+// SOURCE METADATA
+// ════════════════════════════════════════════════════
+const SOURCE_META = {
+  physics_9: { label: 'Physics IX (SSC-I)', doc: 'E-Marking Notes Physics IX — AKU-EB 2023', year: '2023' },
+  physics_10: { label: 'Physics X (SSC-II)', doc: 'E-Marking Notes Physics X — AKU-EB 2025', year: '2025' },
+  physics_11: { label: 'Physics XI (HSSC-I)', doc: 'E-Marking Notes Physics XI — AKU-EB 2025', year: '2025' },
+  physics_12: { label: 'Physics XII (HSSC-II)', doc: 'E-Marking Notes Physics XII — AKU-EB 2025', year: '2025' },
+  
+  mathematics_9: { label: 'Mathematics IX (SSC-I)', doc: 'E-Marking Notes Mathematics IX — AKU-EB 2025', year: '2025' },
+  mathematics_10: { label: 'Mathematics X (SSC-II)', doc: 'E-Marking Notes Mathematics X — AKU-EB 2024', year: '2024' },
+  mathematics_11: { label: 'Mathematics XI (HSSC-I)', doc: 'E-Marking Notes Mathematics XI — AKU-EB 2025', year: '2025' },
+  mathematics_12: { label: 'Mathematics XII (HSSC-II)', doc: 'E-Marking Notes Mathematics XII — AKU-EB 2025', year: '2025' }
+};
+
+// ════════════════════════════════════════════════════
+// UI STATE
+// ════════════════════════════════════════════════════
+let currentKey = '';
+
+function getApiKey() {
+  return localStorage.getItem('ps_api_key') || '';
+}
+
+function updateApiBadge() {
+  const key = getApiKey();
+  const badge = document.getElementById('apiBadge');
+  if (key) {
+    badge.className = 'api-badge set';
+    badge.textContent = '✓ API KEY SET';
+    currentKey = key;
+  } else {
+    badge.className = 'api-badge unset';
+    badge.textContent = '⚙ SET API KEY';
+  }
+}
+
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('visible');
+  const saved = getApiKey();
+  if (saved) document.getElementById('apiKeyInput').value = saved;
+  document.getElementById('apiKeyInput').focus();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('visible');
+}
+
+function saveApiKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (!val.startsWith('sk-ant-')) {
+    alert('Please enter a valid Anthropic API key starting with sk-ant-');
+    return;
+  }
+  localStorage.setItem('ps_api_key', val);
+  currentKey = val;
+  updateApiBadge();
+  closeModal();
+}
+
+function getSourceKey() {
+  const subject = document.getElementById('subjectSelect').value;
+  const cls = document.getElementById('classSelect').value;
+  if (!subject || !cls) return null;
+  return `${subject}_${cls}`;
+}
+
+function updateSource() {
+  const key = getSourceKey();
+  const ind = document.getElementById('sourceIndicator');
+  const txt = document.getElementById('sourceText');
+  if (key && SOURCE_META[key]) {
+    const meta = SOURCE_META[key];
+    txt.textContent = `Using: ${meta.doc}`;
+    ind.classList.add('visible');
+  } else {
+    ind.classList.remove('visible');
+  }
+}
+
+// Custom marks toggle
+document.getElementById('marksTotal').addEventListener('change', function() {
+  document.getElementById('customMarksField').style.display =
+    this.value === 'custom' ? 'block' : 'none';
+});
+
+function getMarks() {
+  const sel = document.getElementById('marksTotal').value;
+  if (sel === 'custom') return document.getElementById('customMarks').value;
+  return sel;
+}
+
+// ════════════════════════════════════════════════════
+// GENERATE ANSWER
+// ════════════════════════════════════════════════════
+async function generateAnswer() {
+  const sourceKey = getSourceKey();
+  if (!sourceKey || !EMARKING_KNOWLEDGE[sourceKey]) {
+    showError('Please select a subject and class before generating an answer.');
+    return;
+  }
+
+  const question = document.getElementById('questionInput').value.trim();
+  if (!question) {
+    showError('Please enter a question.');
+    return;
+  }
+
+  const marks = getMarks();
+  const qType = document.getElementById('qType').value;
+
+  // Clear previous output
+  hideError();
+  document.getElementById('answerCard').classList.remove('visible');
+
+  // UI loading state
+  const btn = document.getElementById('solveBtn');
+  const spinner = btn.querySelector('.spinner');
+  btn.disabled = true;
+  spinner.style.display = 'inline-block';
+
+  // Build the system instructions using your embedded EMARKING_KNOWLEDGE dictionary
+  const systemPromptText = `You are an expert academic evaluator for the Aga Khan University Examination Board (AKU-EB). Your task is to output an authentic, highly calibrated model answer based strictly on the provided E-Marking Notes.
+
+Use this authentic alignment data to guide the generation structure and depth:
+${EMARKING_KNOWLEDGE[sourceKey]}
+
+Output constraints:
+- Use clean semantic HTML tags.
+- Use <div class="marks-callout"><strong>MARK DISTRIBUTION</strong>...</div> for breakdown details.
+- Use <div class="warn-callout"><strong>COMMON MISTAKE</strong>...</div> for errors to avoid.
+- Use <hr class="divider"> between major explanation blocks.
+- Use <ul> and <li> for lists, and regular <p> text for details.
+Do NOT use any markdown. Do NOT use \`\`\` code blocks. Return only the raw inner HTML content.`;
+
+  const userMessage = `Question (${qType}, ${marks} marks): ${question}\nGenerate a complete model answer that would score full ${marks} marks in the examination.`;
+
+  try {
+    // Calling your secure serverless function proxy instead of Anthropic directly!
+    const response = await fetch('/api/solve', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        systemPrompt: systemPromptText,
+        messages: [
+          { role: 'user', content: userMessage }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(errData.error || 'Server returned an error status.');
+    }
+
+    const data = await response.json();
+    
+    // Render the response
+    const rawHtml = data.content[0].text;
+    const meta = SOURCE_META[sourceKey];
+    renderAnswer(question, marks, rawHtml, meta);
+
+  } catch (error) {
+    console.error(error);
+    showError(`Generation failed: ${error.message}`);
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+}
+
+function setLoading(on) {
+  const btn = document.getElementById('solveBtn');
+  const spinner = document.getElementById('spinner');
+  const txt = document.getElementById('solveBtnText');
+  btn.disabled = on;
+  spinner.style.display = on ? 'block' : 'none';
+  txt.textContent = on ? 'Generating…' : 'Generate Board Answer';
+}
+
+function showError(msg) {
+  const card = document.getElementById('errorCard');
+  card.textContent = msg;
+  card.classList.add('visible');
+}
+
+function hideError() {
+  document.getElementById('errorCard').classList.remove('visible');
+}
+
+function hideAnswer() {
+  document.getElementById('answerCard').classList.remove('visible');
+}
+
+function showAnswer(html, question, marks, meta) {
+  const card = document.getElementById('answerCard');
+  const title = document.getElementById('answerTitle');
+  const badge = document.getElementById('answerMarksBadge');
+  const content = document.getElementById('answerContent');
+  const banner = document.getElementById('sourceBannerText');
+
+  // Truncate question for title
+  const shortQ = question.length > 60 ? question.substring(0, 60) + '…' : question;
+  title.textContent = shortQ;
+  badge.textContent = `${marks} marks`;
+  banner.textContent = `Calibrated against ${meta.doc}`;
+
+  content.innerHTML = html;
+  card.classList.add('visible');
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function copyAnswer() {
+  const content = document.getElementById('answerContent');
+  const text = content.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.btn-copy');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => {
+      btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy Answer Text`;
+    }, 2000);
+  });
+}
+
+// Enter key in textarea
+document.getElementById('questionInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) generateAnswer();
+});
+
+// Modal close on overlay click
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// Init
+updateApiBadge();
+updateSource();
+</script>
+</body>
+</html>
