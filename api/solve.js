@@ -34,11 +34,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: userMessageText }]
-          }
-        ],
+       contents: [{ role: "user", parts: [{ text: userMessageText }] }],
         systemInstruction: {
           parts: [{ text: systemPrompt }]
         }
