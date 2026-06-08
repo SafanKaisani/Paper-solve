@@ -1,2 +1,2 @@
 # Paper-solve
-Spectrum 25
+Spectrum 26
