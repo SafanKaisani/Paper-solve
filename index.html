@@ -1378,15 +1378,33 @@ if (!response.ok) {
 }
 
     const data = await response.json();
-    
-    // Render the response
-    const rawHtml = data.content[0].text;
-    const meta = SOURCE_META[sourceKey];
-    renderAnswer(question, marks, rawHtml, meta);
+    console.log("Backend payload received:", data);
 
-  } catch (error) {
-    console.error(error);
-    showError(`Generation failed: ${error.message}`);
+    // 1. If the backend sent an error message, catch it immediately
+    if (data.error) {
+      throw new Error(typeof data.error === 'object' ? (data.error.message || JSON.stringify(data.error)) : data.error);
+    }
+
+    // 2. Safe parsing across different model variations (Anthropic vs Gemini)
+    let rawHtml = '';
+    
+    if (data.candidates && data.candidates[0]?.content?.parts?.[0]) {
+      // ✅ This maps exactly to the Gemini payload structure returned by your backend
+      rawHtml = data.candidates[0].content.parts[0].text;
+    } else if (data.content && Array.isArray(data.content) && data.content[0]) {
+      // Fallback for Anthropic data format
+      rawHtml = data.content[0].text;
+    } else if (typeof data === 'string') {
+      rawHtml = data;
+    } else {
+      throw new Error('Received an unreadable data structure from the backend. Check your console.');
+    }
+
+    // 3. Render out the response safely onto the app card
+    const meta = SOURCE_META[sourceKey];
+    showAnswer(rawHtml, question, marks, meta);
+    } catch (error) {
+    showError(error.message || 'An unexpected error occurred.');
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -1455,6 +1473,7 @@ document.getElementById('questionInput').addEventListener('keydown', function(e)
 document.getElementById('modalOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
+
 
 // Init
 updateApiBadge();
