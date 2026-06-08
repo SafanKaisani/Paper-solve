@@ -1262,9 +1262,6 @@ const SOURCE_META = {
 // ════════════════════════════════════════════════════
 let currentKey = '';
 
-function getApiKey() {
-  return localStorage.getItem('ps_api_key') || '';
-}
 
 function updateApiBadge() {
   const key = getApiKey();
@@ -1279,28 +1276,6 @@ function updateApiBadge() {
   }
 }
 
-function openModal() {
-  document.getElementById('modalOverlay').classList.add('visible');
-  const saved = getApiKey();
-  if (saved) document.getElementById('apiKeyInput').value = saved;
-  document.getElementById('apiKeyInput').focus();
-}
-
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('visible');
-}
-
-function saveApiKey() {
-  const val = document.getElementById('apiKeyInput').value.trim();
-  if (!val.startsWith('sk-ant-')) {
-    alert('Please enter a valid Anthropic API key starting with sk-ant-');
-    return;
-  }
-  localStorage.setItem('ps_api_key', val);
-  currentKey = val;
-  updateApiBadge();
-  closeModal();
-}
 
 function getSourceKey() {
   const subject = document.getElementById('subjectSelect').value;
